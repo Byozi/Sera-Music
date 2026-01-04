@@ -40,17 +40,17 @@ async def mention_admins(_, message: types.Message):
             user_display += f" (@{sender.username})"
     else:
         # Anonymous admin or channel
-   user_display = "ᴀɴᴏɴɪᴍ ʏᴏɴᴇᴛɪᴄɪ"
+   user_display = "Anonim Yönetici"
 
-    # Build formatted reply message
+   # Build formatted reply message
     if cleaned_text:
-      reply_msg = (
+        reply_msg = (
             f"<blockquote><b><i>\"{cleaned_text}\"</i></b>\n"
-            f"ʙɪʟᴅɪʀᴇɴ: {user_display} 🔔</blockquote>\n\n"
+            f"BILDIREN: {user_display} 🔔</blockquote>\n\n"
         )
     else:
-       reply_msg = (
-            f"<blockquote>ʙɪʟᴅɪʀᴇɴ: {user_display} 🔔</blockquote>\n\n"
+        reply_msg = (
+            f"<blockquote>BILDIREN: {user_display} 🔔</blockquote>\n\n"
         )
 
     # Get all administrators
@@ -87,7 +87,7 @@ async def mention_admins(_, message: types.Message):
 
     if mentions:
         reply_msg += ", ".join(mentions)
-   else:
+    else:
         reply_msg += "<i>Bahsedilecek görünür insan yönetici bulunamadı.</i>"
 
     # Yanıtı gönder
