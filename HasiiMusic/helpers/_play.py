@@ -1,0 +1,152 @@
+# ==============================================================================
+# _play.py - Play Command Helper & Validator
+# ==============================================================================
+# This file contains the @checkUB decorator used by play commands.
+# Validates:
+# - User permissions (only real users, not anonymous admins)
+# - Chat type (only supergroups)
+# - Command syntax (query or reply required)
+# - Queue limits
+# - YouTube URL validity
+#
+# This decorator ensures all play commands have proper validation before execution.
+# ==============================================================================
+
+import asyncio
+
+from pyrogram import enums, errors, types
+
+from HasiiMusic import app, config, db, queue, yt
+
+
+def checkUB(play):
+    async def wrapper(_, m: types.Message):
+        if not m.from_user:
+            return await m.reply_text(m.lang["play_user_invalid"])
+
+        if m.chat.type != enums.ChatType.SUPERGROUP:
+            await m.reply_text(m.lang["play_chat_invalid"])
+            return await app.leave_chat(m.chat.id)
+
+        if not m.reply_to_message and (
+            len(m.command) < 2 or (len(m.command)
+                                   == 2 and m.command[1] == "-f")
+        ):
+            return await m.reply_text(m.lang["play_usage"])
+
+        if len(queue.get_queue(m.chat.id)) >= config.QUEUE_LIMIT:
+            return await m.reply_text(m.lang["play_queue_full"].format(config.QUEUE_LIMIT))
+
+        force = m.command[0].endswith("force") or (
+            len(m.command) > 1 and "-f" in m.command[1]
+        )
+        cplay = m.command[0][0] == "c"
+        
+        # Detect video mode: command starts with 'v' or has 'v' as second char (cvplay)
+        command = m.command[0].lower()
+        video = command[0] == 'v' or (len(command) > 1 and command[1] == 'v')
+        
+        url = yt.url(m)
+        # Only validate URL if not replying to media (Telegram files have t.me URLs)
+        if url and not m.reply_to_message and not yt.valid(url):
+            return await m.reply_text(m.lang["play_unsupported"])
+
+        play_mode = await db.get_play_mode(m.chat.id)
+        if play_mode or force:
+            adminlist = await db.get_admins(m.chat.id)
+            if (
+                m.from_user.id not in adminlist
+                and not await db.is_auth(m.chat.id, m.from_user.id)
+                and not m.from_user.id in app.sudoers
+            ):
+                return await m.reply_text(m.lang["play_admin"])
+
+        if m.chat.id not in db.active_calls:
+            client = await db.get_client(m.chat.id)
+            try:
+                member = await app.get_chat_member(m.chat.id, client.id)
+                if member.status in [
+                    enums.ChatMemberStatus.BANNED,
+                    enums.ChatMemberStatus.RESTRICTED,
+                ]:
+                    try:
+                        await app.unban_chat_member(
+                            chat_id=m.chat.id, user_id=client.id
+                        )
+                    except:
+                        return await m.reply_text(
+                            m.lang["play_banned"].format(
+                                app.name,
+                                client.id,
+                                client.mention,
+                                f"@{client.username}" if client.username else None,
+                            )
+                        )
+            except errors.ChatAdminRequired:
+               return await m.reply_text(
+                            f"<blockquote><b>🔐 Bot Admin Gerekli</b></blockquote>\n\n"
+                            f"<blockquote>Bu sohbette müzik çalabilmem için <b>yönetici</b> olmam gerekiyor.\n\n"
+                            f"<b>Gerekli yetkiler:</b>\n"
+                            f"• Sesli Sohbetleri Yönet\n"
+                            f"• Bağlantı ile Kullanıcı Davet Et\n"
+                            f"• Mesajları Sil\n\n"
+                            f"Lütfen beni gerekli yetkilerle yönetici yapın.</blockquote>"
+                       )
+            except errors.UserNotParticipant:
+                if m.chat.username:
+                    invite_link = m.chat.username
+                    try:
+                        await client.resolve_peer(invite_link)
+                    except:
+                        pass
+                else:
+                    try:
+                        invite_link = (await app.get_chat(m.chat.id)).invite_link
+                        if not invite_link:
+                            invite_link = await app.export_chat_invite_link(m.chat.id)
+                    except errors.ChatAdminRequired:
+                        return await m.reply_text(
+                            f"<blockquote><b>🔐 Bot Admin Gerekli</b></blockquote>\n\n"
+                            f"<blockquote>Bu sohbette müzik çalabilmem için <b>yönetici</b> olmam gerekiyor.\n\n"
+                            f"<b>Gerekli yetkiler:</b>\n"
+                            f"• Sesli Sohbetleri Yönet\n"
+                            f"• Bağlantı ile Kullanıcı Davet Et\n"
+                            f"• Mesajları Sil\n\n"
+                            f"Lütfen beni gerekli yetkilerle yönetici yapın.</blockquote>"
+                       )
+                    except Exception as ex:
+                        return await m.reply_text(
+                            m.lang["play_invite_error"].format(
+                                type(ex).__name__)
+                        )
+
+                umm = await m.reply_text(m.lang["play_invite"].format(app.name))
+                await asyncio.sleep(2)
+                try:
+                    await client.join_chat(invite_link)
+                except errors.UserAlreadyParticipant:
+                    pass
+                except errors.InviteRequestSent:
+                    try:
+                        await client.approve_chat_join_request(m.chat.id, client.id)
+                    except Exception as ex:
+                        return await umm.edit_text(
+                            m.lang["play_invite_error"].format(
+                                type(ex).__name__)
+                        )
+                except Exception as ex:
+                    return await umm.edit_text(
+                        m.lang["play_invite_error"].format(type(ex).__name__)
+                    )
+
+                await umm.delete()
+                await client.resolve_peer(m.chat.id)
+
+        try:
+            await m.delete()
+        except:
+            pass
+
+        return await play(_, m, force, url, cplay, video)
+
+    return wrapper
