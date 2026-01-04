@@ -100,14 +100,14 @@ class Config:
         # URLs for various bot images
         self.DEFAULT_THUMB: str = getenv(
             "DEFAULT_THUMB",
-            "https://i.ibb.co/Q3nnGw8b/sera.png"  # Default thumbnail
+            "https://files.catbox.moe/acqq03.png"  # Default thumbnail
         )
         self.PING_IMG: str = getenv(
-            "PING_IMG", "https://i.ibb.co/Q3nnGw8b/sera.png")    # Ping command image
+            "PING_IMG", "https://files.catbox.moe/acqq03.png")    # Ping command image
         self.START_IMG: str = getenv(
-            "START_IMG", "https://i.ibb.co/Q3nnGw8b/sera.png")  # Start command image
+            "START_IMG", "https://files.catbox.moe/acqq03.png")  # Start command image
         self.RADIO_IMG: str = getenv(
-            "RADIO_IMG", "https://i.ibb.co/Q3nnGw8b/sera.png")    # Radio command image
+            "RADIO_IMG", "https://files.catbox.moe/acqq03.png")    # Radio command image
 
     def _parse_excluded_chats(self) -> List[int]:
         """
