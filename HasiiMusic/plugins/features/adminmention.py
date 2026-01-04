@@ -40,17 +40,17 @@ async def mention_admins(_, message: types.Message):
             user_display += f" (@{sender.username})"
     else:
         # Anonymous admin or channel
-   user_display = "Anonim Yönetici"
+        user_display = "ᴀɴᴏɴʏᴍᴏᴜꜱ ᴀᴅᴍɪɴ"
 
-   # Build formatted reply message
+    # Build formatted reply message
     if cleaned_text:
         reply_msg = (
             f"<blockquote><b><i>\"{cleaned_text}\"</i></b>\n"
-            f"BILDIREN: {user_display} 🔔</blockquote>\n\n"
+            f"ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ: {user_display} 🔔</blockquote>\n\n"
         )
     else:
         reply_msg = (
-            f"<blockquote>BILDIREN: {user_display} 🔔</blockquote>\n\n"
+            f"<blockquote>ʀᴇᴘᴏʀᴛᴇᴅ ʙʏ: {user_display} 🔔</blockquote>\n\n"
         )
 
     # Get all administrators
@@ -81,19 +81,19 @@ async def mention_admins(_, message: types.Message):
                     f"<a href='tg://user?id={user.id}'>{user.first_name}</a>")
     except Exception as e:
         await message.reply_text(
-            "<blockquote>❌ Yöneticiler alınamadı. Botun doğru izinlere sahip olduğundan emin olun.</blockquote>"
+            "<blockquote>❌ Failed to fetch administrators. Make sure the bot has proper permissions.</blockquote>"
         )
         return
 
     if mentions:
         reply_msg += ", ".join(mentions)
     else:
-        reply_msg += "<i>Bahsedilecek görünür insan yönetici bulunamadı.</i>"
+        reply_msg += "<i>No visible human admins found to mention.</i>"
 
-    # Yanıtı gönder
+    # Send the reply
     try:
         await message.reply_text(reply_msg, disable_web_page_preview=True)
     except Exception as e:
         await message.reply_text(
-            "<blockquote>❌ Yönetici bildirimi gönderilemedi.</blockquote>"
+            "<blockquote>❌ Failed to send admin notification.</blockquote>"
         )
