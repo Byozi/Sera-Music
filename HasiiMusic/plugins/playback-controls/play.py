@@ -99,13 +99,13 @@ async def play_hndlr(
     chat_id = m.chat.id
     if cplay:
         channel_id = await db.get_cmode(m.chat.id)
-       if channel_id is None:
+        if channel_id is None:
             return await m.reply_text(
-                "❌ **Kanal oynatma etkin değil.**\n\n"
-                "**Bağlantılı kanal için etkinleştirmek:**\n"
+                "❌ **Channel play is not enabled.**\n\n"
+                "**To enable for linked channel:**\n"
                 "`/channelplay linked`\n\n"
-                "**Herhangi bir kanal için etkinleştirmek:**\n"
-                "`/channelplay [kanal_id]`"
+                "**To enable for any channel:**\n"
+                "`/channelplay [channel_id]`"
             )
         try:
             chat = await app.get_chat(channel_id)
@@ -113,8 +113,8 @@ async def play_hndlr(
         except:
             await db.set_cmode(m.chat.id, None)
             return await m.reply_text(
-                "❌ **Kanal alınamadı.**\n\n"
-                "Kanaldan yönetici olduğumdan ve kanal oynatmanın doğru ayarlandığından emin olun."
+                "❌ **ꜰᴀɪʟᴇᴅ ᴛᴏ ɢᴇᴛ ᴄʜᴀɴɴᴇʟ.**\n\n"
+                "ᴍᴀᴋᴇ ꜱᴜʀᴇ ɪ'ᴍ ᴀᴅᴍɪɴ ɪɴ ᴛʜᴇ ᴄʜᴀɴɴᴇʟ ᴀɴᴅ ᴄʜᴀɴɴᴇʟ ᴘʟᴀʏ ɪꜱ ꜱᴇᴛ ᴄᴏʀʀᴇᴄᴛʟʏ."
             )
 
     try:
@@ -145,9 +145,9 @@ async def play_hndlr(
             except Exception as e:
                 await safe_edit(
                     sent,
-                    f"<blockquote>❌ ᴏʏɴᴀᴛᴍᴀ ʟɪꜱᴛᴇꜱɪ ᴀʟɪɴᴀᴍᴀᴅɪ.\n\n"
-                    f"ʏᴏᴜᴛᴜʙᴇ ᴏʏɴᴀᴛᴍᴀ ʟɪꜱᴛᴇʟᴇʀɪ ᴍᴇᴠᴄᴜᴛᴛᴀ ꜱᴏʀᴜɴ ʏᴀꜱᴀᴍᴀᴋᴛᴀᴅɪʀ. "
-                    f"ʟᴜᴛꜰᴇɴ ʙᴜɴᴜɴ ʏᴇʀɪɴᴇ ᴛᴇᴋ ᴛᴇᴋ ꜱᴀʀᴋɪʟᴀʀɪ ᴏʏɴᴀᴛᴍᴀʏɪ ᴅᴇɴᴇʏɪɴ.</blockquote>"
+                    f"<blockquote>❌ ꜰᴀɪʟᴇᴅ ᴛᴏ ꜰᴇᴛᴄʜ ᴘʟᴀʏʟɪꜱᴛ.\n\n"
+                    f"ʏᴏᴜᴛᴜʙᴇ ᴘʟᴀʏʟɪꜱᴛꜱ ᴀʀᴇ ᴄᴜʀʀᴇɴᴛʟʏ ᴇxᴘᴇʀɪᴇɴᴄɪɴɢ ɪꜱꜱᴜᴇꜱ. "
+                    f"ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴘʟᴀʏɪɴɢ ɪɴᴅɪᴠɪᴅᴜᴀʟ ꜱᴏɴɢꜱ ɪɴꜱᴛᴇᴀᴅ.</blockquote>"
                 )
                 return
 
@@ -226,17 +226,17 @@ async def play_hndlr(
     if not file.file_path:
         file.file_path = await yt.download(file.id, video=video, is_live=file.is_live)
         if not file.file_path:
-         await safe_edit(
+            await safe_edit(
                 sent,
-                "❌ **Medya indirilemedi.**\n\n"
-                "**Olası sebepler:**\n"
-                "• YouTube bot aktivitesi tespit etti (çerezleri güncelleyin)\n"
-                "• Video bölgeye özel veya özel\n"
-                "• Yaş kısıtlamalı içerik (çerez gerektirir)\n\n"
-                f"**Destek:** {config.SUPPORT_CHAT}"
+                "❌ **Failed to download media.**\n\n"
+                "**Possible reasons:**\n"
+                "• YouTube detected bot activity (update cookies)\n"
+                "• Video is region-blocked or private\n"
+                "• Age-restricted content (requires cookies)\n\n"
+                f"**Support:** {config.SUPPORT_CHAT}"
             )
 
-    # file.video varsa (Telegram dosyaları) onu kullan, yoksa komut video bayrağını kullan
+    # Use file.video if it's set (Telegram files), otherwise use command video flag
     is_video = file.video if hasattr(file, 'video') and file.video else video
     
     try:
@@ -246,19 +246,18 @@ async def play_hndlr(
         if "bot" in error_msg.lower() or "sign in" in error_msg.lower():
             await safe_edit(
                 sent,
-                "❌ **YouTube bot tespiti tetiklendi.**\n\n"
-                "**Çözüm:**\n"
-                "• `HasiiMusic/cookies/` klasöründeki YouTube çerezlerini güncelleyin\n"
-                "• Tekrar denemeden önce birkaç dakika bekleyin\n"
-                "• Kesintisiz müzik için /radio'yu deneyin\n\n"
-                f"**Destek:** {config.SUPPORT_CHAT}"
+                "❌ **YouTube bot detection triggered.**\n\n"
+                "**Solution:**\n"
+                "• Update YouTube cookies in `HasiiMusic/cookies/` folder\n"
+                "• Wait a few minutes before trying again\n"
+                "• Try /radio for uninterrupted music\n\n"
+                f"**Support:** {config.SUPPORT_CHAT}"
             )
         else:
             await safe_edit(
                 sent,
-                f"❌ **Oynatma hatası:**\n{error_msg}\n\n"
-                f"**Destek:** {config.SUPPORT_CHAT}"
-            )
+                f"❌ **Playback error:**\n{error_msg}\n\n"
+                f"**Support:** {config.SUPPORT_CHAT}"
                 
                 
                 
